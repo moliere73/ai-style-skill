@@ -1,5 +1,8 @@
 style:
   remove_em_dash: true
-  short_sentences: true
   simple_words: true
-  concise: true
+  capitalize_sentences: true
+
+preferences:
+  tone: concise
+  reading_level: simple

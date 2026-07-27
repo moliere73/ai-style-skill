@@ -51,4 +51,17 @@ def rewrite(text: str) -> str:
     result = remove_em_dashes(text)
     result = simplify_words(result)
     result = remove_repeated_spaces(result)
-    return result
+    result = capitalize_sentences(result)
+    return result 
+
+def capitalize_sentences(text: str) -> str:
+    """Capitalize the first letter of each sentence."""
+    parts = re.split(r"([.!?]\s+)", text)
+    result = []
+
+    for part in parts:
+        if part and not re.fullmatch(r"[.!?]\s+", part):
+            part = part[0].upper() + part[1:] if part else part
+        result.append(part)
+
+    return "".join(result)
