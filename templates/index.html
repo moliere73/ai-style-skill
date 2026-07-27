@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>AI Style Skill</title>
+
+    <style>
+        body {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background: #fafafa;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        p {
+            color: #555;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            padding: 12px;
+            box-sizing: border-box;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .profile-selector {
+            margin-top: 20px;
+        }
+
+        .profile-selector label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .output {
+            margin-top: 30px;
+            padding: 18px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .output h2 {
+            margin-top: 0;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>AI Style Skill</h1>
+
+<p>
+    Rewrite AI-generated text using configurable writing profiles.
+</p>
+
+<form method="POST">
+
+    <label for="text">
+        <strong>Text to rewrite</strong>
+    </label>
+
+    <textarea
+        id="text"
+        name="text"
+        placeholder="Paste AI-generated text here..."
+        required
+    >{{ original_text }}</textarea>
+
+    <div class="profile-selector">
+        <label for="profile">
+            Writing Profile
+        </label>
+
+        <select id="profile" name="profile">
+            {% for profile_key, profile_name in profiles.items() %}
+                <option
+                    value="{{ profile_key }}"
+                    {% if selected_profile == profile_key %}selected{% endif %}
+                >
+                    {{ profile_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit">
+        Rewrite Text
+    </button>
+
+</form>
+
+{% if rewritten_text %}
+
+<div class="output">
+
+    <h2>Rewritten Text</h2>
+
+    <pre>{{ rewritten_text }}</pre>
+
+</div>
+
+{% endif %}
+
+</body>
+</html>
