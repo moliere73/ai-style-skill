@@ -6,4 +6,19 @@ style:
 
 preferences:
   tone: concise
-  reading_level: simple
+  reading_level: simple 
+
+profiles:
+  concise:
+    remove_em_dash: true
+    simple_words: true
+    capitalize_sentences: true
+    remove_double_spaces: true
+
+  preserve_punctuation:
+    remove_em_dash: false
+    simple_words: true
+    capitalize_sentences: true
+    remove_double_spaces: true
+
+default_profile: concise

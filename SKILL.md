@@ -70,6 +70,13 @@ Common replacements include:
 
 Apply replacements only when they preserve the intended meaning.
 
+For the concise profile:
+
+- Remove unnecessary transition words like "Furthermore," "Moreover," and "Additionally" unless they are essential.
+- Replace phrases like "reach out" with "ask," "contact," or nothing when appropriate.
+- Split long sentences into two shorter sentences if doing so improves readability.
+- Prefer the shortest natural wording that preserves the original meaning.
+
 ### Preserve Punctuation
 
 Rules:
