@@ -60,7 +60,10 @@ def rewrite(text: str, config: dict) -> str:
     result = remove_repeated_spaces(result)
 
     if rules.get("capitalize_sentences", False):
-        result = capitalize_sentences(result)
+        result = capitalize_sentences(result) 
+
+    if rules.get("remove_double_spaces", True):
+        result = remove_double_spaces(result)
 
     return result
 
@@ -74,4 +77,9 @@ def capitalize_sentences(text: str) -> str:
             part = part[0].upper() + part[1:] if part else part
         result.append(part)
 
-    return "".join(result)
+    return "".join(result) 
+
+def remove_double_spaces(text: str) -> str:
+    while "  " in text:
+        text = text.replace("  ", " ")
+    return text
