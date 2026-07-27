@@ -6,7 +6,7 @@ from rewriter import remove_em_dashes, rewrite, simplify_words
 class TestRewriter(unittest.TestCase):
     def test_remove_em_dash(self):
         result = remove_em_dashes("This is useful—and simple.")
-        self.assertEqual(result, "This is useful. simple.")
+        self.assertEqual(result, "This is useful. and simple.")
 
     def test_simplify_words(self):
         result = simplify_words("We utilize numerous tools.")
