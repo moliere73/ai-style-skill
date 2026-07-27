@@ -14,6 +14,7 @@ class TestWebApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"AI Style Skill", response.data)
 
+
     def test_rewrite_form(self):
         response = self.client.post(
             "/",
@@ -21,8 +22,18 @@ class TestWebApp(unittest.TestCase):
                 "text": (
                     "Furthermore, we utilize this tool"
                     "\u2014in order to facilitate communication."
-                )
+                ),
+                "remove_em_dash": "on",
+                "simple_words": "on",
+                "capitalize_sentences": "on",
+                "remove_double_spaces": "on",
             },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Also, we use this tool. To help communication.",
+            response.data,
         )
 
         self.assertEqual(response.status_code, 200)
