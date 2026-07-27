@@ -1,3 +1,4 @@
+from config import load_style
 import argparse
 from pathlib import Path
 
@@ -40,7 +41,8 @@ def main() -> None:
 
     try:
         original_text = read_input(args.file, args.text)
-        rewritten_text = rewrite(original_text)
+        config = load_style()
+        rewritten_text = rewrite(original_text, config)
         print(rewritten_text)
     except (FileNotFoundError, ValueError) as error:
         parser.error(str(error))

@@ -46,13 +46,23 @@ def remove_repeated_spaces(text: str) -> str:
     return text.strip()
 
 
-def rewrite(text: str) -> str:
-    """Apply all supported style rules."""
-    result = remove_em_dashes(text)
-    result = simplify_words(result)
+def rewrite(text: str, config: dict) -> str:
+    """Apply enabled style rules from the configuration."""
+    result = text
+    rules = config.get("style", {})
+
+    if rules.get("remove_em_dash", False):
+        result = remove_em_dashes(result)
+
+    if rules.get("simple_words", False):
+        result = simplify_words(result)
+
     result = remove_repeated_spaces(result)
-    result = capitalize_sentences(result)
-    return result 
+
+    if rules.get("capitalize_sentences", False):
+        result = capitalize_sentences(result)
+
+    return result
 
 def capitalize_sentences(text: str) -> str:
     """Capitalize the first letter of each sentence."""

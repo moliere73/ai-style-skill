@@ -14,12 +14,25 @@ class TestRewriter(unittest.TestCase):
 
     def test_complete_rewrite(self):
         result = rewrite(
-            "Furthermore, we utilize this tool—in order to facilitate communication."
+            "Furthermore, we utilize this tool—in order to facilitate communication.",
+            TEST_CONFIG,
         )
 
         self.assertNotIn("—", result)
         self.assertNotIn("utilize", result.lower())
         self.assertNotIn("facilitate", result.lower())
+        self.assertEqual(
+            result,
+            "Also, we use this tool. To help communication.",
+        )
+
+TEST_CONFIG = {
+    "style": {
+        "remove_em_dash": True,
+        "simple_words": True,
+        "capitalize_sentences": True,
+    }
+}
 
 
 if __name__ == "__main__":
