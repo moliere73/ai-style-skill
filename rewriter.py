@@ -25,18 +25,37 @@ def remove_em_dashes(text: str) -> str:
 
 
 def simplify_words(text: str) -> str:
-    """Replace unnecessarily complex words with simpler alternatives."""
-    result = text
+    phrase_replacements = {
+        "in order to": "to",
+        "reach out because I was wondering": "ask",
+        "reach out to inquire about whether": "ask whether",
+        "reach out in order to inquire about whether": "ask whether",
+        "would like to take this opportunity to": "would like to",
+        "there might potentially be": "there are",
+        "regarding the status of my application": "on my application",
+        "regarding my application": "on my application",
+        "anything else that you might possibly require from me":
+            "anything else you need from me",
+        "I just wanted to let you know that": "",
+        "I completely understand that": "I understand that",
+    }
 
-    for complex_phrase, simple_phrase in WORD_REPLACEMENTS.items():
-        pattern = re.compile(
-            rf"\b{re.escape(complex_phrase)}\b",
-            flags=re.IGNORECASE,
-        )
-        result = pattern.sub(simple_phrase, result)
+    word_replacements = {
+        "Furthermore": "Also",
+        "furthermore": "also",
+        "utilize": "use",
+        "numerous": "many",
+        "facilitate": "help",
+        "approximately": "about",
+    }
 
-    return result
+    for original, replacement in phrase_replacements.items():
+        text = text.replace(original, replacement)
 
+    for original, replacement in word_replacements.items():
+        text = text.replace(original, replacement)
+
+    return text
 
 def remove_repeated_spaces(text: str) -> str:
     """Clean up spacing introduced by other transformations."""
