@@ -34,7 +34,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable
-
+from datetime import datetime
 
 @dataclass(frozen=True)
 class BenchmarkCase:
@@ -141,111 +141,32 @@ def load_cases(test_dir: Path) -> list[BenchmarkCase]:
     return [parse_markdown_test(path) for path in paths]
 
 def load_profile(profile: str) -> dict:
-    """Load a rewrite profile from individual or combined YAML files."""
+    """Load the current rewrite configuration.
+
+    The MVP currently uses one shared style.yaml configuration.
+    Profile names remain in the test files for future profile support.
+    """
 
     import yaml
 
-    aliases = {
-        "professional": "concise",
-    }
+    style_path = Path("style.yaml")
 
-    requested_profile = aliases.get(profile, profile)
+    if not style_path.exists():
+        raise FileNotFoundError(
+            "Could not find style.yaml. "
+            "Run benchmark.py from the repository root."
+        )
 
-    direct_paths = [
-        Path("profiles") / f"{requested_profile}.yaml",
-        Path("profiles") / f"{requested_profile}.yml",
-        Path("config") / f"{requested_profile}.yaml",
-        Path("config") / f"{requested_profile}.yml",
-        Path("config") / "profiles" / f"{requested_profile}.yaml",
-        Path("config") / "profiles" / f"{requested_profile}.yml",
-        Path(f"{requested_profile}.yaml"),
-        Path(f"{requested_profile}.yml"),
-    ]
+    with style_path.open("r", encoding="utf-8") as file:
+        config = yaml.safe_load(file) or {}
 
-    # First support one YAML file per profile.
-    for path in direct_paths:
-        if path.exists():
-            with path.open("r", encoding="utf-8") as file:
-                config = yaml.safe_load(file) or {}
+    if not isinstance(config, dict):
+        raise TypeError(
+            "style.yaml must contain a YAML mapping, "
+            f"but found {type(config).__name__}."
+        )
 
-            if not isinstance(config, dict):
-                raise TypeError(
-                    f"{path} must contain a YAML mapping, "
-                    f"but found {type(config).__name__}."
-                )
-
-            return config
-
-    # Then support combined files such as styles.yaml or profiles.yaml.
-    yaml_paths = sorted(
-        list(Path(".").glob("*.yaml"))
-        + list(Path(".").glob("*.yml"))
-        + list(Path("config").glob("*.yaml"))
-        + list(Path("config").glob("*.yml"))
-        + list(Path("profiles").glob("*.yaml"))
-        + list(Path("profiles").glob("*.yml"))
-    )
-
-    for path in yaml_paths:
-        with path.open("r", encoding="utf-8") as file:
-            data = yaml.safe_load(file) or {}
-
-        if not isinstance(data, dict):
-            continue
-
-        # Format:
-        #
-        # concise:
-        #   remove_em_dashes: true
-        if requested_profile in data:
-            config = data[requested_profile]
-
-            if not isinstance(config, dict):
-                raise TypeError(
-                    f"Profile '{requested_profile}' in {path} must be a mapping."
-                )
-
-            return config
-
-        # Format:
-        #
-        # profiles:
-        #   concise:
-        #     remove_em_dashes: true
-        profiles = data.get("profiles")
-
-        if isinstance(profiles, dict) and requested_profile in profiles:
-            config = profiles[requested_profile]
-
-            if not isinstance(config, dict):
-                raise TypeError(
-                    f"Profile '{requested_profile}' in {path} must be a mapping."
-                )
-
-            return config
-
-        # Format:
-        #
-        # name: concise
-        # rules:
-        #   remove_em_dashes: true
-        if data.get("name") == requested_profile:
-            rules = data.get("rules", data)
-
-            if not isinstance(rules, dict):
-                raise TypeError(
-                    f"Profile rules in {path} must be a mapping."
-                )
-
-            return rules
-
-    searched = "\n".join(f"  - {path}" for path in yaml_paths)
-
-    raise FileNotFoundError(
-        f"Could not find profile '{profile}'. "
-        f"Resolved profile name: '{requested_profile}'.\n"
-        f"YAML files inspected:\n{searched or '  No YAML files found.'}"
-    )
+    return config
 
 def run_rewriter(text: str, profile: str) -> str:
     """Load the selected profile and run the rewrite engine."""
@@ -362,6 +283,94 @@ def print_summary(results: list[BenchmarkResult]) -> None:
     print(f"Non-exact matches:  {failed}")
     print(f"Average similarity: {average_similarity:.1%}")
 
+def write_markdown_report(
+    results: list[BenchmarkResult],
+    output_path: Path,
+) -> None:
+    """Write benchmark results to a Markdown report."""
+
+    total = len(results)
+    passed = sum(result.passed for result in results)
+    failed = total - passed
+    average_similarity = (
+        sum(result.similarity for result in results) / total
+        if total
+        else 0.0
+    )
+
+    lines = [
+        "# Cortical Style Benchmark Report",
+        "",
+        f"Generated: {datetime.now().isoformat(timespec='seconds')}",
+        "",
+        "## Summary",
+        "",
+        f"- Cases run: {total}",
+        f"- Exact matches: {passed}",
+        f"- Non-exact matches: {failed}",
+        f"- Average similarity: {average_similarity:.1%}",
+        "",
+        "## Results",
+        "",
+    ]
+
+    for result in results:
+        status = "PASS" if result.passed else "FAIL"
+
+        lines.extend(
+            [
+                f"### {result.case.title}",
+                "",
+                f"- File: `{result.case.path.name}`",
+                f"- Profile: `{result.case.profile}`",
+                f"- Status: **{status}**",
+                f"- Similarity: {result.similarity:.1%}",
+                "",
+                "#### Input",
+                "",
+                "```text",
+                result.case.input_text,
+                "```",
+                "",
+                "#### Expected Output",
+                "",
+                "```text",
+                result.case.expected_output,
+                "```",
+                "",
+                "#### Actual Output",
+                "",
+                "```text",
+                result.actual_output,
+                "```",
+                "",
+            ]
+        )
+
+        if not result.passed:
+            diff = unified_diff(
+                result.case.expected_output,
+                result.actual_output,
+            )
+
+            lines.extend(
+                [
+                    "#### Difference",
+                    "",
+                    "```diff",
+                    diff or "No readable diff available.",
+                    "```",
+                    "",
+                ]
+            )
+
+    output_path.write_text(
+        "\n".join(lines),
+        encoding="utf-8",
+    )
+
+    print(f"\nReport written to {output_path}")
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the command-line parser."""
@@ -390,6 +399,15 @@ def build_parser() -> argparse.ArgumentParser:
             "value, even if outputs are not exact matches. Example: 0.90"
         ),
     )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=Path("benchmark_results.md"),
+        help=(
+            "Path for the generated Markdown report "
+            "(default: benchmark_results.md)."
+        ),
+    )
     return parser
 
 
@@ -406,6 +424,7 @@ def main() -> int:
 
     results = run_benchmark(cases, show_diff=args.diff)
     print_summary(results)
+    write_markdown_report(results, args.report)
 
     if not results:
         return 2
